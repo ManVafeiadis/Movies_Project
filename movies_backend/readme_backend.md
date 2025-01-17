@@ -179,6 +179,45 @@ curl -X POST http://localhost:8000/api/movies/1/review/ \
 - JWT for authentication
 - Custom permissions for admin-only access to certain endpoints
 
+## Testing
+
+The project includes comprehensive test coverage for all major functionality. Tests are written using Django's test framework and Django REST Framework's APITestCase.
+
+### Test Coverage
+
+1. Registration and Login Tests:
+   - User registration validation
+   - Password strength and match verification
+   - JWT token acquisition
+
+2. Movie Management Tests:
+   - Movie creation (admin only)
+   - Movie listing
+   - Movie updates (admin only)
+   - Movie deletion (admin only)
+   - Unauthorized access attempts
+
+3. Review System Tests:
+   - Review creation by authenticated users
+   - Prevention of duplicate reviews
+   - Rating validation (1-10 range)
+   - Multiple user review scenarios
+   - Unauthorized access prevention
+
+### Running Tests
+
+Run all tests:
+```bash
+python manage.py test
+```
+
+Run specific test classes:
+```bash
+python manage.py test movies.tests.RegistrationLoginTests
+python manage.py test movies.tests.MovieTests
+python manage.py test movies.tests.ReviewTests
+```
+
 ## Contributing
 
 1. Fork the repository
