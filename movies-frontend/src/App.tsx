@@ -1,5 +1,3 @@
-// src/App.tsx
-
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { useAuth } from './context/AuthContext';
@@ -10,6 +8,7 @@ import Register from './components/forms/Register';
 import MovieList from './components/Movies/MovieList';
 import MovieDetail from './components/Movies/MovieDetail';
 import CreateMovie from './components/Movies/CreateMovie';
+import MovieEdit from './components/Movies/MovieEdit';
 
 // Protected Route component for admin-only routes
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -17,17 +16,6 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   
   if (!user || !user.isAdmin) {
     return <Navigate to="/" replace />;
-  }
-  
-  return <>{children}</>;
-};
-
-// Protected Route component for authenticated users
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
-  
-  if (!user) {
-    return <Navigate to="/login" replace />;
   }
   
   return <>{children}</>;
@@ -66,6 +54,14 @@ function App() {
                 <AdminRoute>
                   <CreateMovie />
                 </AdminRoute>
+              } 
+            />
+            <Route 
+              path="/edit-movie/:id" 
+              element={
+                  <AdminRoute>
+                      <MovieEdit />
+                  </AdminRoute>
               } 
             />
 

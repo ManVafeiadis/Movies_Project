@@ -1,17 +1,18 @@
-// src/components/movies/MovieDetail.tsx
-
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Movie, Review } from '../../types';
 import { MovieService, ReviewService } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 
-// ReviewForm component for creating new reviews
+// ReviewForm component for creating/editing reviews
 const ReviewForm: React.FC<{
     onSubmit: (review: string, rating: number) => Promise<void>;
-}> = ({ onSubmit }) => {
-    const [review, setReview] = useState('');
-    const [rating, setRating] = useState(5);
+    initialRating?: number;
+    initialReview?: string;
+    isEdit?: boolean;
+}> = ({ onSubmit, initialRating = 5, initialReview = '', isEdit = false }) => {
+    const [review, setReview] = useState(initialReview);
+    const [rating, setRating] = useState(initialRating);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -19,8 +20,10 @@ const ReviewForm: React.FC<{
         setIsSubmitting(true);
         try {
             await onSubmit(review, rating);
-            setReview('');
-            setRating(5);
+            if (!isEdit) {
+                setReview('');
+                setRating(5);
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -28,7 +31,9 @@ const ReviewForm: React.FC<{
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4 bg-white p-6 rounded-lg shadow-sm">
-            <h3 className="text-xl font-bold text-navy">Write a Review</h3>
+            <h3 className="text-xl font-bold text-navy">
+                {isEdit ? 'Edit Review' : 'Write a Review'}
+            </h3>
             
             <div>
                 <label className="block text-navy mb-2">Rating (1-10)</label>
@@ -62,7 +67,7 @@ const ReviewForm: React.FC<{
                     ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
                 `}
             >
-                {isSubmitting ? 'Submitting...' : 'Submit Review'}
+                {isSubmitting ? 'Submitting...' : isEdit ? 'Update Review' : 'Submit Review'}
             </button>
         </form>
     );
@@ -71,14 +76,50 @@ const ReviewForm: React.FC<{
 // Single review component
 const ReviewItem: React.FC<{
     review: Review;
+    onUpdate?: (id: number, reviewText: string, rating: number) => Promise<void>;
     onDelete: (id: number) => Promise<void>;
-    canDelete: boolean;
-}> = ({ review, onDelete, canDelete }) => {
+    canModify: boolean;
+}> = ({ review, onUpdate, onDelete, canModify }) => {
+    const [isEditing, setIsEditing] = useState(false);
+
     const formattedDate = new Date(review.created_at).toLocaleDateString('en-UK', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
     });
+
+    const handleUpdate = async (reviewText: string, rating: number) => {
+        if (onUpdate) {
+            try {
+                await onUpdate(review.id, reviewText, rating);
+                setIsEditing(false);
+            } catch (error) {
+                console.error('Error updating review:', error);
+                alert('Failed to update review');
+            }
+        }
+    };
+
+    if (isEditing) {
+        return (
+            <div className="border border-sage rounded-lg overflow-hidden">
+                <ReviewForm
+                    onSubmit={handleUpdate}
+                    initialRating={review.rating}
+                    initialReview={review.review || ''}
+                    isEdit={true}
+                />
+                <div className="p-4 bg-gray-50 border-t border-sage">
+                    <button
+                        onClick={() => setIsEditing(false)}
+                        className="text-navy hover:text-opacity-80"
+                    >
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white p-4 rounded-lg shadow-sm">
@@ -94,13 +135,21 @@ const ReviewItem: React.FC<{
                 </span>
             </div>
             <p className="text-navy">{review.review}</p>
-            {canDelete && (
-                <button
-                    onClick={() => onDelete(review.id)}
-                    className="mt-2 text-red-500 hover:text-red-700 text-sm"
-                >
-                    Delete Review
-                </button>
+            {canModify && (
+                <div className="mt-2 space-x-4">
+                    <button
+                        onClick={() => setIsEditing(true)}
+                        className="text-navy hover:text-opacity-80 text-sm"
+                    >
+                        Edit
+                    </button>
+                    <button
+                        onClick={() => onDelete(review.id)}
+                        className="text-red-500 hover:text-red-700 text-sm"
+                    >
+                        Delete
+                    </button>
+                </div>
             )}
         </div>
     );
@@ -143,7 +192,6 @@ const MovieDetail: React.FC = () => {
                 rating
             });
             
-            // Update the movie state with the new review
             setMovie(prev => {
                 if (!prev) return prev;
                 return {
@@ -154,6 +202,38 @@ const MovieDetail: React.FC = () => {
         } catch (error) {
             console.error('Error submitting review:', error);
             alert('Failed to submit review');
+        }
+    };
+
+    // Handle review update
+    const handleReviewUpdate = async (reviewId: number, reviewText: string, rating: number) => {
+        if (!movie) return;
+
+        try {
+            await ReviewService.update(reviewId, {
+                review: reviewText,
+                rating
+            });
+            
+            setMovie(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    reviews: prev.reviews.map(review =>
+                        review.id === reviewId
+                            ? {
+                                ...review,
+                                review: reviewText,
+                                rating: rating,
+                                updated_at: new Date().toISOString()
+                            }
+                            : review
+                    )
+                };
+            });
+        } catch (error) {
+            console.error('Error updating review:', error);
+            throw error;
         }
     };
 
@@ -203,9 +283,19 @@ const MovieDetail: React.FC = () => {
             <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="flex justify-between items-start mb-4">
                     <h1 className="text-3xl font-bold text-navy">{movie.title}</h1>
-                    <span className="bg-navy text-cream px-4 py-2 rounded-full">
-                        Rating: {averageRating}
-                    </span>
+                    <div className="flex space-x-4">
+                        <span className="bg-navy text-cream px-4 py-2 rounded-full">
+                            Rating: {averageRating}
+                        </span>
+                        {user?.isAdmin && (
+                            <Link
+                                to={`/edit-movie/${id}`}
+                                className="px-4 py-2 bg-gold text-navy rounded-md hover:bg-opacity-90 transition-colors duration-200"
+                            >
+                                Edit Movie
+                            </Link>
+                        )}
+                    </div>
                 </div>
                 
                 <div className="space-y-4">
@@ -241,8 +331,9 @@ const MovieDetail: React.FC = () => {
                             <ReviewItem
                                 key={review.id}
                                 review={review}
+                                onUpdate={handleReviewUpdate}
                                 onDelete={handleReviewDelete}
-                                canDelete={
+                                canModify={
                                     user?.isAdmin || 
                                     user?.username === review.review_author
                                 }

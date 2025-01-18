@@ -1,5 +1,3 @@
-// src/components/reviews/ReviewsList.tsx
-
 import React, { useState } from 'react';
 import { Review } from '../../types';
 import { useAuth } from '../../context/AuthContext';

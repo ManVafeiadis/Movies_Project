@@ -1,5 +1,3 @@
-// src/services/api.ts
-
 import axios from 'axios';
 import { Movie } from '../types';
 
@@ -24,6 +22,8 @@ export const MovieService = {
   getOne: (id: number) => api.get<Movie>(`/movies/${id}/`),
   create: (movie: Omit<Movie, 'id' | 'reviews'>) => 
     api.post<Movie>('/movies/', movie),
+  update: (id: number, movie: Omit<Movie, 'id' | 'reviews'>) =>
+    api.put<Movie>(`/movies/${id}/`, movie),
   delete: (id: number) => api.delete(`/movies/${id}/`),
 };
 

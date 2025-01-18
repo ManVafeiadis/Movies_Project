@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { MovieService } from '../../services/api';
+import { Movie } from '../../types';
 import FormInput from '../forms/FormInput';
 
-// Define the shape of our form data
 interface MovieForm {
     title: string;
     director: string;
@@ -12,32 +12,54 @@ interface MovieForm {
     release_date: string;
 }
 
-// Define the shape of our form errors
 interface FormErrors {
     [key: string]: string;
 }
 
-const CreateMovie: React.FC = () => {
+const MovieEdit: React.FC = () => {
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     
-    // Initialize form state with empty values except release_date
     const [formData, setFormData] = useState<MovieForm>({
         title: '',
         director: '',
         category: '',
         description: '',
-        release_date: new Date().toISOString().split('T')[0] // Today's date as default
+        release_date: '',
     });
     
-    // State for form validation errors and submission status
     const [errors, setErrors] = useState<FormErrors>({});
+    const [isLoading, setIsLoading] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Validate all form fields before submission
+    // Fetch movie data when component mounts
+    useEffect(() => {
+        const fetchMovie = async () => {
+            try {
+                const response = await MovieService.getOne(Number(id));
+                const movie = response.data;
+                setFormData({
+                    title: movie.title,
+                    director: movie.director,
+                    category: movie.category,
+                    description: movie.description,
+                    release_date: movie.release_date,
+                });
+            } catch (error) {
+                console.error('Error fetching movie:', error);
+                setErrors({ submit: 'Failed to load movie data' });
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchMovie();
+    }, [id]);
+
+    // Validate all form fields
     const validateForm = (): boolean => {
         const newErrors: FormErrors = {};
 
-        // Check each required field and add error messages if empty
         if (!formData.title.trim()) {
             newErrors.title = 'Title is required';
         }
@@ -62,7 +84,7 @@ const CreateMovie: React.FC = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    // Handle changes for both input fields and textarea
+    // Handle form field changes
     const handleChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
@@ -71,7 +93,7 @@ const CreateMovie: React.FC = () => {
             ...prev,
             [name]: value
         }));
-        // Clear error message when user starts typing in a field
+        // Clear error when user starts typing
         if (errors[name]) {
             setErrors(prev => ({
                 ...prev,
@@ -84,35 +106,35 @@ const CreateMovie: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        // Return early if validation fails
         if (!validateForm()) return;
 
         setIsSubmitting(true);
         try {
-            const response = await MovieService.create(formData);
-            // Redirect to the newly created movie's detail page
-            navigate(`/movie/${response.data.id}`);
+            await MovieService.update(Number(id), formData);
+            navigate(`/movie/${id}`);
         } catch (error) {
-            console.error('Error creating movie:', error);
-            setErrors({ submit: 'Failed to create movie. Please try again.' });
+            console.error('Error updating movie:', error);
+            setErrors({ submit: 'Failed to update movie. Please try again.' });
         } finally {
             setIsSubmitting(false);
         }
     };
 
+    if (isLoading) {
+        return <div className="text-center py-8">Loading movie data...</div>;
+    }
+
     return (
         <div className="max-w-2xl mx-auto">
-            <h1 className="text-3xl font-bold text-navy mb-8">Create New Movie</h1>
+            <h1 className="text-3xl font-bold text-navy mb-8">Edit Movie</h1>
 
             <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-md">
-                {/* Display submission error if any */}
                 {errors.submit && (
                     <div className="bg-red-100 text-red-700 p-4 rounded-md mb-4">
                         {errors.submit}
                     </div>
                 )}
 
-                {/* Movie Title Input */}
                 <FormInput
                     label="Title"
                     type="text"
@@ -124,7 +146,6 @@ const CreateMovie: React.FC = () => {
                     placeholder="Enter movie title"
                 />
 
-                {/* Director Input */}
                 <FormInput
                     label="Director"
                     type="text"
@@ -136,7 +157,6 @@ const CreateMovie: React.FC = () => {
                     placeholder="Enter director's name"
                 />
 
-                {/* Category Input */}
                 <FormInput
                     label="Category"
                     type="text"
@@ -148,7 +168,6 @@ const CreateMovie: React.FC = () => {
                     placeholder="Enter movie category"
                 />
 
-                {/* Description Textarea */}
                 <div className="mb-4">
                     <label className="block text-navy font-medium mb-2">
                         Description
@@ -173,7 +192,6 @@ const CreateMovie: React.FC = () => {
                     )}
                 </div>
 
-                {/* Release Date Input */}
                 <FormInput
                     label="Release Date"
                     type="date"
@@ -184,11 +202,10 @@ const CreateMovie: React.FC = () => {
                     disabled={isSubmitting}
                 />
 
-                {/* Form Actions */}
                 <div className="flex justify-end space-x-4">
                     <button
                         type="button"
-                        onClick={() => navigate('/')}
+                        onClick={() => navigate(`/movie/${id}`)}
                         className="px-6 py-2 rounded-md border-2 border-navy text-navy
                                  hover:bg-navy hover:text-cream transition-colors duration-200"
                         disabled={isSubmitting}
@@ -204,7 +221,7 @@ const CreateMovie: React.FC = () => {
                             ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}
                         `}
                     >
-                        {isSubmitting ? 'Creating...' : 'Create Movie'}
+                        {isSubmitting ? 'Saving...' : 'Save Changes'}
                     </button>
                 </div>
             </form>
@@ -212,4 +229,4 @@ const CreateMovie: React.FC = () => {
     );
 };
 
-export default CreateMovie;
+export default MovieEdit;

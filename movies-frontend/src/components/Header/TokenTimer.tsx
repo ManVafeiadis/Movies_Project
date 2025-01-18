@@ -1,5 +1,3 @@
-// src/components/Header/TokenTimer.tsx
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 

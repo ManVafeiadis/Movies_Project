@@ -1,5 +1,3 @@
-// src/components/forms/FormInput.tsx
-
 import React from 'react';
 
 interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {

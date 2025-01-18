@@ -1,5 +1,3 @@
-// src/components/reviews/ReviewItem.tsx
-
 import React, { useState } from 'react';
 import { Review } from '../../types';
 import ReviewForm from './ReviewForm';

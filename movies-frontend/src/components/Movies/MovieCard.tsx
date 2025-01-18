@@ -15,7 +15,7 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onDelete }) => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
 
-    // Format the release date to a more readable format
+    // Format the release date
     const formattedDate = new Date(movie.release_date).toLocaleDateString('en-UK', {
         year: 'numeric',
         month: 'long',
@@ -26,6 +26,12 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onDelete }) => {
     const averageRating = movie.reviews.length > 0
         ? (movie.reviews.reduce((acc, review) => acc + review.rating, 0) / movie.reviews.length).toFixed(1)
         : 'No ratings';
+
+    // Truncate description to roughly 3 lines (assuming ~60 chars per line)
+    const truncateDescription = (text: string, maxLength: number = 180) => {
+        if (text.length <= maxLength) return text;
+        return text.slice(0, maxLength).trim() + '...';
+    };
 
     const handleDelete = async () => {
         if (window.confirm('Are you sure you want to delete this movie?')) {
@@ -61,6 +67,11 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onDelete }) => {
                         </span>
                     </div>
                 </div>
+
+                {/* Show truncated description in non-expanded state */}
+                <div className="mt-2 text-navy">
+                    <p className="line-clamp-3">{truncateDescription(movie.description)}</p>
+                </div>
             </div>
 
             {/* Expandable content */}
@@ -71,7 +82,6 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onDelete }) => {
                 `}
             >
                 <div className="p-4 border-t border-sage">
-                    <p className="text-navy mb-2">{movie.description}</p>
                     <p className="text-sm text-navy opacity-75 mb-4">
                         Released: {formattedDate}
                     </p>
