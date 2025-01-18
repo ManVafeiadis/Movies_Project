@@ -11,11 +11,12 @@ interface RegisterForm {
 }
 
 interface FormErrors {
-    username?: string;
-    email?: string;
-    password?: string;
-    password2?: string;
-    general?: string;
+    username?: string | string[];
+    email?: string | string[];
+    password?: string | string[];
+    password1?: string | string[];  // Added this for Django's password1 field
+    password2?: string | string[];
+    non_field_errors?: string | string[];
 }
 
 const Register: React.FC = () => {
@@ -30,6 +31,42 @@ const Register: React.FC = () => {
     });
     const [errors, setErrors] = useState<FormErrors>({});
     const [isLoading, setIsLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!validateForm()) return;
+        
+        setIsLoading(true);
+        try {
+            await register(
+                formData.username,
+                formData.email,
+                formData.password,
+                formData.password2
+            );
+            navigate('/');
+        } catch (error: any) {
+            console.error('Registration error:', error);
+            
+            // Handle different types of error responses
+            if (error.response?.data) {
+                const errorData = error.response.data;
+                // Map password1 errors to password field
+                if (errorData.password1) {
+                    errorData.password = errorData.password1;
+                    delete errorData.password1;
+                }
+                setErrors(errorData);
+            } else {
+                setErrors({
+                    non_field_errors: error.message || 'Registration failed'
+                });
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const validateForm = (): boolean => {
         const newErrors: FormErrors = {};
@@ -82,28 +119,19 @@ const Register: React.FC = () => {
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const renderErrors = (errors: string | string[] | undefined) => {
+        if (!errors) return null;
         
-        if (!validateForm()) return;
-        
-        setIsLoading(true);
-        try {
-            await register(
-                formData.username,
-                formData.email,
-                formData.password,
-                formData.password2
-            );
-            navigate('/');
-        } catch (error) {
-            setErrors({
-                general: 'Registration failed. Please try again.'
-            });
-        } finally {
-            setIsLoading(false);
-        }
+        const errorArray = Array.isArray(errors) ? errors : [errors];
+        return errorArray.map((error, index) => (
+            <div key={index} className="text-sm text-red-600">
+                {error}
+            </div>
+        ));
     };
+
+
+
 
     return (
         <div className="max-w-md mx-auto bg-cream p-8 rounded-lg shadow-md">
@@ -112,9 +140,10 @@ const Register: React.FC = () => {
             </h2>
             
             <form onSubmit={handleSubmit} className="space-y-4">
-                {errors.general && (
+                {/* Display non-field errors at the top */}
+                {errors.non_field_errors && (
                     <div className="p-3 bg-red-100 text-red-700 rounded-md mb-4">
-                        {errors.general}
+                        {renderErrors(errors.non_field_errors)}
                     </div>
                 )}
                 
@@ -161,7 +190,7 @@ const Register: React.FC = () => {
                     placeholder="Confirm your password"
                     disabled={isLoading}
                 />
-                
+
                 <button
                     type="submit"
                     className={`
