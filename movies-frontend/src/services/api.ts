@@ -1,7 +1,7 @@
 // src/services/api.ts
 
 import axios from 'axios';
-import { Movie, Review } from '../types';
+import { Movie } from '../types';
 
 const API_URL = 'http://localhost:8000/api';
 
@@ -13,6 +13,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
+    config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;

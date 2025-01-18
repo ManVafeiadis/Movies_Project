@@ -34,8 +34,23 @@ export interface AuthContextType {
 }
 
 export interface JwtPayload {
+    token_type: string;
+    exp: number;
+    iat: number;
+    jti: string;
+    user_id: number;
     username: string;
     is_staff: boolean;
-    exp: number;
+    email: string;
 }
+
+export interface DjangoUser {
+    pk: number;
+    username: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+    is_staff: boolean;
+}
+
   
