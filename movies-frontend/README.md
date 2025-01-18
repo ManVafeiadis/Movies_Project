@@ -24,7 +24,7 @@ Before you begin, ensure you have installed:
 1. Clone the repository:
 ```bash
 git clone <https://github.com/ManVafeiadis/Movies_Project/tree/main/movies-frontend>
-cd movie-review-frontend
+cd movies-frontend
 ```
 
 2. Install dependencies:
@@ -230,11 +230,3 @@ To create a compatible backend, ensure:
    - Admin-only routes for movie management
    - User authentication for reviews
    - Owner/admin permissions for review management
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit changes
-4. Push to the branch
-5. Open a Pull Request
