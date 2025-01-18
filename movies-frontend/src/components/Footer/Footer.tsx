@@ -40,9 +40,7 @@ const Footer: React.FC = () => {
                     <div className="space-y-4">
                         <h3 className="text-xl font-bold">Contact</h3>
                         <div className="text-cream/80 space-y-2">
-                            <p>Email: info@moviereviews.com</p>
-                            <p>Phone: (123) 456-7890</p>
-                            <p>Address: 123 Movie Street</p>
+                            <p>Email: info@moviereviewer.com</p>
                         </div>
                     </div>
                 </div>
