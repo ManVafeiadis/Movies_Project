@@ -8,5 +8,4 @@ urlpatterns = [
     path('reviews/<int:pk>/', ReviewDetailAPIView.as_view(), name='review-detail'),
     path('auth/registration/', CustomRegisterView.as_view(), name='registration-page'),
     path('auth/user/',get_user_info, name='user-info'),
-
 ]
