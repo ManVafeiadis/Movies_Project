@@ -6,6 +6,8 @@ from rest_framework.exceptions import  ValidationError
 from movies.api.permissions import IsAdminUserOrReadOnly, IsNotAuthenticated
 from dj_rest_auth.registration.views import RegisterView
 from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 
 
@@ -71,3 +73,16 @@ class CustomRegisterView(RegisterView):
                 status=status.HTTP_403_FORBIDDEN
             )
         return super().post(request, *args, **kwargs)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_user_info(request):
+    return Response({
+        'pk': request.user.pk,
+        'username': request.user.username,
+        'email': request.user.email,
+        'first_name': request.user.first_name,
+        'last_name': request.user.last_name,
+        'is_staff': request.user.is_staff
+    })

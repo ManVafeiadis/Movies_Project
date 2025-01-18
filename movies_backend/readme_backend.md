@@ -68,7 +68,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-4. Create a `.env` file in the root directory with the following content:
+4. A. Create a `.env` file in the root directory with the following content:
 ```
 # Django configuration
 SECRET_KEY=your-secret-key
@@ -85,6 +85,26 @@ DB_PORT=3306
 JWT_ACCESS_TOKEN_LIFETIME=50  # 5 minutes
 JWT_REFRESH_TOKEN_LIFETIME=1440  # 24 hours
 ```
+B. Add this lines to your settings.py:
+  ```
+  from dotenv import load_dotenv
+  load_dotenv()  # take environment variables from .env
+
+  # To call the variables from .env you have to follow this syntax:
+  # SECURITY WARNING: keep the secret key used in production secret!
+    SECRET_KEY = os.getenv('SECRET_KEY')
+  # And for your external library the following:
+    DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
+    }
+}
+  ```
 
 5. Create MySQL database:
 ```sql
