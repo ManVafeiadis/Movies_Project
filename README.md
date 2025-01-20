@@ -11,7 +11,6 @@ This project consists of two main components:
 ### Key Features
 - Movie browsing and searching
 - User reviews and ratings
-- Personalized watchlists
 - User authentication
 - Responsive design
 
